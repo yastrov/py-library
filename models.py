@@ -33,7 +33,8 @@ class Author(Base):
 
     @staticmethod
     def get(dbsession, secondname, firstname=None):
-        obj = dbsession.query(Author).filter(Author.secondname == secondname)
+        obj = dbsession.query(Author).filter(
+                        Author.secondname == secondname)
         if firstname:
             obj = obj.filter(Author.firstname == firstname)
         obj = obj.first()
@@ -42,8 +43,8 @@ class Author(Base):
         return obj
 
     def __repr__(self):
-        return "<Author('{}', '{}','{}')>".\
-                format(self.id, self.firstname, self.secondname)
+        return "<Author(id={}, '{}','{}')>".\
+                format(self.id, self.secondname, self.firstname)
 
 
 class Book(Base):
@@ -52,8 +53,10 @@ class Book(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     lang = Column(String, nullable=False)
-    genres = relationship('Genre', secondary=book_genres, backref=backref('books', order_by=title))
-    authors = relationship('Author', secondary=author_books, backref=backref('books', order_by=title))
+    genres = relationship('Genre', secondary=book_genres,
+                          backref=backref('books', order_by=title))
+    authors = relationship('Author', secondary=author_books,
+                          backref=backref('books', order_by=title))
     path = Column(String, nullable=False)
 
     def __init__(self, title, lang, authors, genres, path):
@@ -64,8 +67,8 @@ class Book(Base):
         self.path = path
 
     def __repr__(self):
-        return "<Book('{}', '{}', '{}',)>".\
-                    format(self.id, self.title, 
+        return "<Book(id={}, '{}', '{}',)>".\
+                    format(self.id, self.title,
                     self.authors)
 
 
@@ -78,14 +81,15 @@ class Genre(Base):
 
     @staticmethod
     def get(dbsession, name):
-        obj = dbsession.query(Genre).filter(Genre.name == name).first()
+        obj = dbsession.query(Genre).\
+                        filter(Genre.name == name).first()
         if not obj:
             obj = Genre(name)
         return obj
 
     def __init__(self, name):
         self.name = name
-        self.title = genre_table[name]
+        self.title = genre_table.get(name, 'unknown')
 
     def __repr__(self):
         return "<Genre('{}')>".format(self.name)
