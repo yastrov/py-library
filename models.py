@@ -25,26 +25,30 @@ class Author(Base):
     
     id = Column(Integer, primary_key=True)
     firstname = Column(String)
-    secondname = Column(String)
+    lastname = Column(String)
 
-    def __init__(self, secondname, firstname):
+    def __init__(self, lastname, firstname):
         self.firstname = firstname
-        self.secondname = secondname
+        self.lastname = lastname
 
     @staticmethod
-    def get(dbsession, secondname, firstname=None):
+    def get(dbsession, lastname, firstname=None):
         obj = dbsession.query(Author).filter(
-                        Author.secondname == secondname)
+                        Author.lastname == lastname)
         if firstname:
             obj = obj.filter(Author.firstname == firstname)
         obj = obj.first()
         if not obj:
-            obj = Author(secondname, firstname)
+            obj = Author(lastname, firstname)
         return obj
 
     def __repr__(self):
-        return "<Author(id={}, '{}','{}')>".\
-                format(self.id, self.secondname, self.firstname)
+        return "<Author(id={},'{}','{}')>".\
+                format(self.id, self.lastname, self.firstname)
+
+    def __repr__(self):
+        return "{} {}".\
+                format(self.lastname, self.firstname)
 
 
 class Book(Base):
@@ -67,9 +71,15 @@ class Book(Base):
         self.path = path
 
     def __repr__(self):
-        return "<Book(id={}, '{}', '{}',)>".\
+        return "<Book(id={}, '{}', '{}')>".\
                     format(self.id, self.title,
                     self.authors)
+
+    def __str__(self):
+        return "id={}, '{}', '{}'".\
+                    format(self.id, self.authors,
+                            self.title,
+                            )
 
 
 class Genre(Base):
@@ -77,7 +87,6 @@ class Genre(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False, unique=True)
-    title = Column(String)
 
     @staticmethod
     def get(dbsession, name):
@@ -89,7 +98,9 @@ class Genre(Base):
 
     def __init__(self, name):
         self.name = name
-        self.title = genre_table.get(name, 'unknown')
 
     def __repr__(self):
         return "<Genre('{}')>".format(self.name)
+
+    def __str__(self):
+        return "{} {}".format(self.name, genre_table.get(name, 'unknown'))
