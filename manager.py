@@ -14,9 +14,9 @@ def singleton(cls):
     """Singleton takes from PEP-0318.
     http://www.python.org/dev/peps/pep-0318/#examples"""
     instances = {}
-    def getinstance():
+    def getinstance(*args, **kwargs):
         if cls not in instances:
-            instances[cls] = cls()
+            instances[cls] = cls(*args, **kwargs)
         return instances[cls]
     return getinstance
 
@@ -41,13 +41,13 @@ class BookManager:
         self.session.commit()
 
     def getsession(self):
-        return session
+        return self.session
 
     def query(self, *args, **kwargs):
         """Return Query object. After user may do what he want.
         See more at SQLAlchemy manual."""
         return self.session.query(*args, **kwargs)
 
-     def __del__(self):
+    def __del__(self):
         if self.session:
             self.session.close()
