@@ -61,7 +61,7 @@ class Book(Base):
                           backref=backref('books', order_by=title))
     authors = relationship('Author', secondary=author_books,
                           backref=backref('books', order_by=title))
-    path = Column(String, nullable=False)
+    path = Column(String, nullable=False, unique=True)
 
     def __init__(self, title, lang, authors, genres, path):
         self.title = title
@@ -80,6 +80,14 @@ class Book(Base):
                     format(self.id, self.authors,
                             self.title,
                             )
+
+    @staticmethod
+    def get(dbsession, title, lang, authors, genres, path):
+        obj = dbsession.query(Book).filter(
+                        Book.path == path).one()
+        if not obj:
+            obj = Book(title, lang, authors, genres, path)
+        return obj
 
 
 class Genre(Base):
