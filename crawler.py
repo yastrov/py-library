@@ -57,6 +57,9 @@ class Crawler:
                     elif name.endswith(".fb2.zip"):
                         info = binfo.fromfb2zip(name)
                         yield info
+                    elif name.endswith(".epub"):
+                        info = binfo.fromepub(name)
+                        yield info
                 except etree.XMLSyntaxError as e:
                     print("{}: {}".format(e, name))
                 except InvalidZipFile as e:
@@ -91,7 +94,9 @@ class CrawlerManager:
             g = Genre.get(session, name)
             self.manager.add(g)
             genre_list.append(g)
-        b = Book(dict_.title,dict_.lang, a_list, genre_list, dict_.path)
+        b = Book.get(session, 
+                    dict_.title,dict_.lang, 
+                    a_list, genre_list, dict_.path)
         self.manager.add(b)
         self.manager.commit()
     
@@ -151,11 +156,45 @@ class BookInfo(dict):
                 #print("Bad file '%s' in archieve '%s'!"
                 #        %(error, zipname) )
                 #raise Exception("Bad file '%s' in archieve '%s'!".format(error, zipname))
-                raise InvalidZipFile(zipname,error,)
+                raise InvalidZipFile(zipname,error)
             name = zip.namelist()[0]
             data = zip.read(name)
         datafile = BytesIO(data)
         return self.__xml_to_dict(datafile, fname)
+
+    def fromepub(self, fname):
+        with zipfile.ZipFile(fname, "r") as zip:
+            error = zip.testzip()
+            if error:
+                raise InvalidZipFile(zipname,error)
+            data = zip.read('META-INF/container.xml')
+            datafile = BytesIO(data)
+            tree = etree.parse(datafile)
+            root = tree.getroot()
+            ns = {'ns':'http://www.idpf.org/2007/opf',
+                  'dc':'http://purl.org/dc/elements/1.1/',
+                  'n':'urn:oasis:names:tc:opendocument:xmlns:container',
+                  'xsi':"http://www.w3.org/2001/XMLSchema-instance"}
+            fullpath = tree.xpath('//n:rootfile',namespaces=ns)[0].get('full-path')
+            data = zip.read(fullpath)
+            datafile = BytesIO(data)
+            tree = etree.parse(datafile)
+            root = tree.getroot()
+            self.title = tree.xpath('//dc:title',namespaces=ns)[0].text
+            author =tree.xpath('//dc:creator',namespaces=ns)[0].text
+            firstname, lastname = author.split()
+            self.authors = []
+            d = {}
+            d["firstname"] = firstname
+            d["lastname"] = lastname
+            self.authors.append(d)
+            self.lang = tree.xpath('//dc:language',namespaces=ns)[0].text
+            genre_list = tree.xpath('//dc:subject',namespaces=ns)
+            self.genres = []
+            for element in genre_list:
+              self.genres.append(element.text)
+            self.path = fname
+        return self
 
 
 class InvalidZipFile(Exception):
