@@ -45,7 +45,22 @@ class Crawler:
         self.path = path
     
     def registerbook(self, dict_):
+        """Register book info in database."""
         pass
+
+    def addfile(self, filename):
+        """Register single file"""
+        binfo = BookInfo()
+        try:
+            info = binfo.parsefile(filename)
+            if info:
+                self.registerbook(info)
+        except etree.XMLSyntaxError as e:
+            print("{}: {}".format(e, filename))
+        except InvalidZipFile as e:
+            print(e)
+        except Exception as e:
+            print("{}: {}".format(e, filename))
 
     def walk(self, path=None):
         binfo = BookInfo()
@@ -54,16 +69,7 @@ class Crawler:
         for base, dirs, files in os.walk(self.path):
             for file in files:
                 name = os.path.join(base, file)
-                try:
-                    info = binfo.parsefile(name)
-                    if info:
-                        self.registerbook(info)
-                except etree.XMLSyntaxError as e:
-                    print("{}: {}".format(e, name))
-                except InvalidZipFile as e:
-                    print(e)
-                except Exception as e:
-                    print("{}: {}".format(e, name))
+                self.addfile(name)
 
 
 class CrawlerManager(Crawler):
@@ -108,6 +114,7 @@ class CrawlerManager(Crawler):
         self.manager.commit()
     
     def run(self, path=None):
+        """Register path"""
         if path:
             self.path = path
         self.walk()
@@ -229,7 +236,7 @@ class InvalidZipFile(Exception):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", default=os.getcwd(),
+    parser.add_argument("path",
                         help="path with ebooks")
     parser.add_argument("-d", "--dbase",
                         help="database path for sqlite")
