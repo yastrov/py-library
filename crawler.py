@@ -44,7 +44,10 @@ class Crawler:
     def __init__(self, path=None):
         self.path = path
     
-    def run(self, path=None):
+    def registerbook(self, dict_):
+        pass
+
+    def walk(self, path=None):
         binfo = BookInfo()
         if path:
             self.path = path
@@ -52,15 +55,9 @@ class Crawler:
             for file in files:
                 name = os.path.join(base, file)
                 try:
-                    if name.endswith(".fb2"):
-                        info = binfo.fromfb2(name)
-                        yield info
-                    elif name.endswith(".fb2.zip"):
-                        info = binfo.fromfb2zip(name)
-                        yield info
-                    elif name.endswith(".epub"):
-                        info = binfo.fromepub(name)
-                        yield info
+                    info = binfo.parsefile(name)
+                    if info:
+                        self.registerbook(info)
                 except etree.XMLSyntaxError as e:
                     print("{}: {}".format(e, name))
                 except InvalidZipFile as e:
@@ -69,15 +66,13 @@ class Crawler:
                     print("{}: {}".format(e, name))
 
 
-class CrawlerManager:
-    def __init__(self,  manager, crawler=None, path=None):
+class CrawlerManager(Crawler):
+    def __init__(self,  manager, path=None):
         """Crawler or path for indexing"""
         self.manager = manager
         self.path = path
-        if not crawler:
-            self.crawler = Crawler()
 
-    def __registerbook(self, dict_):
+    def registerbook(self, dict_):
         """Register one book in database.
         dict_ - dictionary with book information"""
         session = self.manager.getsession()
@@ -115,8 +110,7 @@ class CrawlerManager:
     def run(self, path=None):
         if path:
             self.path = path
-        for info in self.crawler.run(self.path):
-            self.__registerbook(info)
+        self.walk()
 
 
 class BookInfo(dict):
@@ -157,10 +151,10 @@ class BookInfo(dict):
             self.authors.append(d)
         return self
 
-    def fromfb2(self, fname):
+    def __fromfb2(self, fname):
         return self.__xml_to_dict(fname, fname)
 
-    def fromfb2zip(self, fname):
+    def __fromfb2zip(self, fname):
         data = None
         with zipfile.ZipFile(fname, "r") as zip:
             error = zip.testzip()
@@ -174,7 +168,7 @@ class BookInfo(dict):
         datafile = BytesIO(data)
         return self.__xml_to_dict(datafile, fname)
 
-    def fromepub(self, fname):
+    def __fromepub(self, fname):
         with zipfile.ZipFile(fname, "r") as zip:
             error = zip.testzip()
             if error:
@@ -207,6 +201,17 @@ class BookInfo(dict):
               self.genres.append(element.text)
             self.path = fname
         return self
+
+    def parsefile(self, filename):
+        """Return None if ebook type is unknown"""
+        if filename.endswith(".fb2"):
+            return self.__fromfb2(filename)
+        elif filename.endswith(".fb2.zip"):
+            return self.__fromfb2zip(filename)
+        elif filename.endswith(".epub"):
+            return self.__fromepub(filename)
+        else:
+            return None
 
 
 class InvalidZipFile(Exception):
