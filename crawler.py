@@ -26,6 +26,7 @@ except ImportError:
           import elementtree.ElementTree as etree
         except ImportError:
           print("Failed to import ElementTree from any known place")
+from sqlalchemy.orm.exc import NoResultFound
 
 __doc__ = """Module for walking in library and makes indexing files
 
@@ -82,21 +83,32 @@ class CrawlerManager:
         session = self.manager.getsession()
         a_list = []
         for element in dict_.authors:
-            a = Author.get(session,
-                            element["lastname"],
-                            element["firstname"])
+            try:
+                a = Author.get(session,
+                                element["lastname"],
+                                element["firstname"])
+            except NoResultFound:
+                a = Author(element["lastname"],
+                           element["firstname"])
             self.manager.add(a)
             a_list.append(a)
 
         genre_list = []
         genres = dict_.genres
         for name in genres:
-            g = Genre.get(session, name)
+            try:
+                g = Genre.get(session, name)
+            except NoResultFound:
+                g = Genre(name)
             self.manager.add(g)
             genre_list.append(g)
-        b = Book.get(session, 
-                    dict_.title,dict_.lang, 
-                    a_list, genre_list, dict_.path)
+        try:
+            b = Book.get(session, 
+                        dict_.title,dict_.lang, 
+                        a_list, genre_list, dict_.path)
+        except NoResultFound:
+            b = Book(dict_.title,dict_.lang, 
+                     a_list, genre_list, dict_.path)
         self.manager.add(b)
         self.manager.commit()
     
@@ -204,23 +216,31 @@ class InvalidZipFile(Exception):
         self.filename = filename
         self.error = error
     def __repr__(self):
-        return "Bad file '%s' in archieve '%s'!".format(error, filename)
+        return "Bad file '{}' in archieve '{}'!".format(error, filename)
     def __str__(self):
         return repr(self)
 
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("path", default=os.getcwd(),
-                        help="work path")
+                        help="path with ebooks")
     parser.add_argument("-d", "--dbase",
-                        help="database path")
+                        help="database path for sqlite")
+    parser.add_argument("-c", "--sqlcommand",
+                        help="raw sql command for connect to database")
     args = parser.parse_args()
-    command = 'sqlite:///{}'.format(args.dbase)
+    if args.dbase:
+        command = 'sqlite:///{}'.format(args.dbase)
+    elif args.sqlcommand:
+        command = args.sqlcommand
+    else:
+        import config
+        command = config.getSQLCommand()
     manager = BookManager(command)
     cm = CrawlerManager(manager)
     cm.run(args.path)
-    q = manager.query(Book)
-    for row in q.all():
-        print(row)
+
+if __name__ == '__main__':
+    main()
