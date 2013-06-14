@@ -87,7 +87,7 @@ def testpath(path, removeoriginal=None):
                 if os.path.exists(zipname):
                     os.remove(name)
 
-if __name__ == '__main__':
+def main():
     try:
         import argparse
         parser = argparse.ArgumentParser()
@@ -115,3 +115,6 @@ if __name__ == '__main__':
     except ImportError:
         print("Please, use Python 2.7+ or use this module as library.")
         print("This version of Python have no module argparse.")
+
+if __name__ == '__main__':
+    main()
