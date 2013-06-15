@@ -38,8 +38,6 @@ class Author(Base):
         if firstname:
             obj = obj.filter(Author.firstname == firstname)
         obj = obj.first()
-        if not obj:
-            obj = Author(lastname, firstname)
         return obj
 
     def __repr__(self):
@@ -48,7 +46,8 @@ class Author(Base):
 
     def __repr__(self):
         return "{} {}".\
-                format(self.lastname, self.firstname)
+                format(self.lastname,
+                        self.firstname)
 
 
 class Book(Base):
@@ -76,8 +75,9 @@ class Book(Base):
                     self.authors)
 
     def __str__(self):
-        return "id={}, '{}', '{}'".\
-                    format(self.id, self.authors,
+        au = ','.join(map(lambda x: str(x), self.authors))
+        return "{}: {}".\
+                    format(au,
                             self.title,
                             )
 
@@ -85,8 +85,6 @@ class Book(Base):
     def get(dbsession, title, lang, authors, genres, path):
         obj = dbsession.query(Book).filter(
                         Book.path == path).one()
-        if not obj:
-            obj = Book(title, lang, authors, genres, path)
         return obj
 
 
@@ -100,8 +98,6 @@ class Genre(Base):
     def get(dbsession, name):
         obj = dbsession.query(Genre).\
                         filter(Genre.name == name).first()
-        if not obj:
-            obj = Genre(name)
         return obj
 
     def __init__(self, name):
@@ -111,4 +107,6 @@ class Genre(Base):
         return "<Genre('{}')>".format(self.name)
 
     def __str__(self):
-        return "{} {}".format(self.name, genre_table.get(name, 'unknown'))
+        return "{} {}".format(self.name,
+                                genre_table.get(self.name,
+                                                'unknown'))
