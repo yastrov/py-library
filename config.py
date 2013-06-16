@@ -16,7 +16,7 @@ config = configparser.ConfigParser()
 
 def getSQLCommand():
     return config.get('dbase', 'command',
-            fallback={'command': 'sqlite:///{}'.format(db_name),})
+            fallback='sqlite:///{}'.format(db_name))
 
 def setSQLCommand(command):
     config['dbase']['command'] = command
@@ -31,5 +31,3 @@ def createconfig():
 
 if os.path.exists(config_filename):
     config.read(config_filename)
-else:
-    createconfig()
