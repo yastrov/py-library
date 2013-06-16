@@ -5,7 +5,6 @@ from models import Book, Author, Genre
 from manager import BookManager
 from io import BytesIO
 import zipfile
-from pprint import pprint
 try:
   from lxml import etree
 except ImportError:
@@ -27,6 +26,7 @@ except ImportError:
         except ImportError:
           print("Failed to import ElementTree from any known place")
 from sqlalchemy.orm.exc import NoResultFound
+import traceback
 
 __doc__ = """Module for walking in library and makes indexing files
 
@@ -35,6 +35,8 @@ Example:
     manager = BookManager(command)
     cm = CrawlerManager(manager)
     cm.run(args.path)
+    #or
+    cm.addfile(args.path)
     q = manager.query(Book)
     for row in q.all():
         print(row)"""
@@ -49,7 +51,7 @@ class Crawler:
         pass
 
     def addfile(self, filename):
-        """Register single file"""
+        """Register single file to index."""
         binfo = BookInfo()
         try:
             info = binfo.parsefile(filename)
@@ -61,8 +63,10 @@ class Crawler:
             print(e)
         except Exception as e:
             print("{}: {}".format(e, filename))
+            traceback.print_exc()
 
     def walk(self, path=None):
+        """Main function for indexing path."""
         binfo = BookInfo()
         if path:
             self.path = path
@@ -79,7 +83,7 @@ class CrawlerManager(Crawler):
         self.path = path
 
     def registerbook(self, dict_):
-        """Register one book in database.
+        """Register one book info in database.
         dict_ - dictionary with book information"""
         session = self.manager.getsession()
         a_list = []
@@ -126,6 +130,7 @@ class BookInfo(dict):
     __delattr__ = dict.__delitem__
 
     def __xml_to_dict(self, file, path):
+        """Take information from raw fb2 file."""
         self.path = path
         ns = {'n':'http://www.gribuser.ru/xml/fictionbook/2.0'}
         
@@ -210,7 +215,8 @@ class BookInfo(dict):
         return self
 
     def parsefile(self, filename):
-        """Return None if ebook type is unknown"""
+        """Return None if ebook type is unknown
+           or book information"""
         if filename.endswith(".fb2"):
             return self.__fromfb2(filename)
         elif filename.endswith(".fb2.zip"):
