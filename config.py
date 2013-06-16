@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 import configparser
 import os
 
 config_filename = os.path.join(
         os.path.expanduser("~"),
         ".config",
-        "library.ini"
+        "elib.ini"
         )
+db_name = os.path.join(
+        os.path.expanduser("~"),
+        ".elib.db")
 
 config = configparser.ConfigParser()
 
 def getSQLCommand():
     return config.get('dbase', 'command',
-            fallback={'command': 'sqlite:///ebooks.db',})
+            fallback={'command': 'sqlite:///{}'.format(db_name),})
 
 def setSQLCommand(command):
     config['dbase']['command'] = command
@@ -24,7 +26,7 @@ def saveconfig():
         config.write(configfile)
 
 def createconfig():
-    config['dbase'] = {'command': 'sqlite:///ebooks.db',}
+    config['dbase'] = {'command': 'sqlite:///{}'.format(db_name),}
     saveconfig()
 
 if os.path.exists(config_filename):
