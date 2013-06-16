@@ -113,6 +113,10 @@ class Genre(Base):
         return "<Genre('{}')>".format(self.name)
 
     def __str__(self):
-        return "{} {}".format(self.name,
-                                genre_table.get(self.name,
+        if self.name in genre_table.keys():
+            s = "{} ({})".format(self.name,
+                               genre_table.get(self.name,
                                                 'unknown'))
+        else:
+            s = "{}".format(self.name)
+        return s
