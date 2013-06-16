@@ -38,6 +38,8 @@ class Author(Base):
         if firstname:
             obj = obj.filter(Author.firstname == firstname)
         obj = obj.first()
+        if not obj:
+            obj = Author(lastname, firstname)
         return obj
 
     def __repr__(self):
@@ -85,6 +87,8 @@ class Book(Base):
     def get(dbsession, title, lang, authors, genres, path):
         obj = dbsession.query(Book).filter(
                         Book.path == path).one()
+        if not obj:
+            obj = Book(title, lang, authors, genres, path)
         return obj
 
 
@@ -98,6 +102,8 @@ class Genre(Base):
     def get(dbsession, name):
         obj = dbsession.query(Genre).\
                         filter(Genre.name == name).first()
+        if not obj:
+            obj = Genre(name)
         return obj
 
     def __init__(self, name):
