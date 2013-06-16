@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import subqueryload
 import traceback
 
+__version__ = '0.1.0'
 __doc__ = """Main module of library package."""
 
 class Counterman:
@@ -132,7 +133,7 @@ def main():
                                     removeoriginal=args.removeoriginal)
         if args.indexing:
             import crawler
-            cm = CrawlerManager(manager)
+            cm = crawler.CrawlerManager(manager)
             if os.path.isdir(args.path):
                 cm.run(args.path)
             else:
@@ -149,7 +150,7 @@ def main():
                 for i, dict_ in d.items():
                     print("{}:   {}".format(i, dict_["doc"]))
                 i = int(input("->_ "))
-                if i == 0 or i == "q":
+                if i == 0:
                     break
                 foo = d[i]["func"]
                 if "by" in d[i]["fname"]:
