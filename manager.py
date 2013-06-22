@@ -3,7 +3,6 @@
 from models import Base, Book, Author, Genre
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
 
 __doc__ = """Use class BookManager for managing 
 database with ebooks collection."""
@@ -22,7 +21,10 @@ def singleton(cls):
 
 @singleton
 class BookManager:
-    """docstring for ClassName"""
+    """Book Manager provides features of database,
+    and hides some trivial operations.
+    Support with statement."""
+
     #def __init__(self, *args, **kwargs):
     def __init__(self, command=None, echo=False):
         if not command:
@@ -43,11 +45,32 @@ class BookManager:
     def getsession(self):
         return self.session
 
+    def closesession(self):
+        """Close current session.
+        Also it must be called in with statement realisation."""
+        if self.session:
+            self.session.close()
+
+    def delete(self, *args):
+        self.session.delete(*args)
+
+    def rollback(self):
+        self.session.rollback()
+
     def query(self, *args, **kwargs):
         """Return Query object. After user may do what he want.
         See more at SQLAlchemy manual."""
         return self.session.query(*args, **kwargs)
 
     def __del__(self):
-        if self.session:
-            self.session.close()
+        self.closesession()
+
+    #For with statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is None:
+            self.commit()
+        else:
+            self.closesession()
