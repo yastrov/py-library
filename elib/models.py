@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Table
-from genretable import genre_table
+from elib.genretable import genre_table
 
 Base = declarative_base()
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
-from models import Book, Author, Genre
-from manager import BookManager
+from elib.models import Book, Author, Genre
+from elib.manager import BookManager
 from io import BytesIO
-import zipfile
+import elib.zipfile
 try:
   from lxml import etree
 except ImportError:

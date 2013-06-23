@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from models import Base, Book, Author, Genre
+from elib.models import Base, Book, Author, Genre
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
