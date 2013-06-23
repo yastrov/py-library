@@ -5,11 +5,11 @@ try:
 except ImportError:
     from distutils.core import setup
  
-import config
-import elib
+import elib.config as config
+import elibs
 
 setup(name='elib',
-        version=elib.__version__,
+        version=elibs.__version__,
         description=('Scripts for managing home ebook (fb2, epub) library:'
                      ' Indexing and search, test zip archives or test xml'
                      ' to valid. '
@@ -17,13 +17,15 @@ setup(name='elib',
         author='Yuri Astrov',
         author_email='yuriastrov@gmail.com',
         url='https://bitbucket.org/yrain/py-library/src',
-        scripts=['elib.py','manager.py', 'config.py','zipper.py','crawler.py','models.py','genretable.py',],
+        scripts=['elibs.py',],
+        packages=['elib',],
+        include_package_data=True,
         install_requires=['lxml>=3.1.0', 
                             'SQLAlchemy>=0.8.0'],
         license = 'MIT',
         entry_points = {
                         'console_scripts': [
-                        'elib = elib:main',
+                        'elib = elibs:main',
                         ],}
         )
 
