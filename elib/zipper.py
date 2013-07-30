@@ -8,39 +8,91 @@ __doc__ = """Compress all .fb2 files to individual zip archives.
 Also test all zip archives in path.
 Print output only bad files."""
 
-def ziponefile(filename, zipname=None, removeoriginal=False):
+class InvalidZipFile(Exception):
+    def __init__(self, filename, error):
+        """
+        filename - file name of zip archive;
+        error - file name of first bad file in archive.
+        """
+        self.filename = filename
+        self.error = error
+    def __repr__(self):
+        return "Bad file '{}' in archieve '{}'!".\
+                format(error, filename)
+    def __str__(self):
+        return repr(self)
+
+
+class ZipReader:
+    """
+    Class for read zip archive and return
+    bytes array or BytesIO.
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.zip = zipfile.ZipFile(self.filename, 'r')
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.zip is not None:
+            self.zip.close()
+        if exc_type is None:
+            pass
+    def namelist(self):
+        return self.zip.namelist()
+    def read(self, filename, raw=False):
+        """
+        Read data from file in zip archive.
+        If raw is True, bytes array would be returned.
+        """
+        data = self.zip.read(filename)
+        if not raw:
+            data = BytesIO(data)
+        return data
+    def testzip(self):
+        return self.zip.testzip()
+    def close(self):
+        if self.zip is not None:
+            self.zip.close()
+
+
+class InvalidXMLFile(Exception): pass
+
+def XMLvalidate(xmlfile, quite=False):
+    """
+    Validate XML, raise InvalidXMLFile file.
+    If quite is True - return False without
+    raise Exception.
+    In future in here may be anothe validators.
+    """
+    try:
+        xml = ET.parse(xmlfile)
+    except ET.ParseError as e:
+        if quite:
+            return False
+        raise InvalidXMLFile(e) from e
+    return True
+
+def walk(path):
+    """
+    Walk on path. Return filename.
+    """
+    for base, dirs, files in os.walk(path):
+        for fname in files:
+            yield os.path.join(base, fname)
+
+def ziponefile(filename, zipname=None):
     """
     Zip one file to individual zip archive.
     filename - name of unzipped file;
     zipname - name of zip archive (if None, it be filename+'.zip');
-    removeoriginal - delete original .fb2 files in path.
     """
     if not zipname:
         zipname = filename + '.zip'
     with zipfile.ZipFile(zipname, 'w', 
                 zipfile.ZIP_DEFLATED) as zip:
         zip.write(filename, os.path.basename(filename))
-        if removeoriginal:
-            with zipfile.ZipFile(zipname, 'w') as zip:
-                error = zip.testzip()
-                if error:
-                    print("Bad file '{}' in archieve '{}'!"
-                          .format(error, filename) )
-                else:
-                    os.remove(filename)
 
-
-def zippath(path, removeoriginal=False):
-    """
-    Zip all files in path and subdirectories.
-    removeoriginal - delete original .fb2 files in path
-    """
-    for base, dirs, files in os.walk(path):
-        for file in files:
-            if not file.endswith('.fb2'):
-                continue
-            fname = os.path.join(base, file)
-            ziponefile(fname, removeoriginal=removeoriginal)
 
 def testfile(filename):
     """
@@ -50,49 +102,54 @@ def testfile(filename):
     """
     try:
         if filename.endswith('.fb2'):
-            xml = ET.parse(filename)
+            XMLvalidate(filename)
         elif filename.endswith('.zip'):
-            with zipfile.ZipFile(filename, 'r') as zip:
-                error = zip.testzip()
+            with ZipReader(filename) as reader:
+                error = reader.testzip()
                 if error:
-                    print("Bad file '{}' in archieve '{}'!"
-                          .format(error, filename) )
-                    return False
-                for name in zip.namelist():
+                    raise InvalidZipFile(filename, error)
+                for name in reader.namelist():
                     if name.endswith('.fb2'):
-                        data = zip.read(name)
-                        datafile = BytesIO(data)
-                        xml = ET.parse(datafile)
+                        datafile = reader.read(name)
+                        XMLvalidate(datafile)
         return True
-    except ET.ParseError as e:
+    except InvalidXMLFile as e:
         print("Error in {}: {}".format(filename, e))
-        return False
     except zipfile.BadZipFile as e:
         print("{}: {} (Need to check manually!)".format(e, filename))
-        return False
-    except Exception as e:
-        print("Invalid zipfile: {}".format(filename))
-        return False
+    except InvalidZipFile as e:
+        print(e)
+    return False
 
-def testpath(path, removeoriginal=None):
+def zippath(path, removeoriginal=False):
+    """
+    Zip all files in path and subdirectories.
+    removeoriginal - delete original .fb2 files in path
+    """
+    for name in walk(path):
+        if not name.endswith('.fb2'):
+            continue
+        ziponefile(name)
+        if removeoriginal and testfile(name):
+            os.remove(name)
+
+def testpath(path, removeoriginal=False):
     """
     Test all zip or fb2 files in path and subdirectories.
     """
-    for base, dirs, files in os.walk(path):
-        for file in files:
-            name = os.path.join(base, file)
-            flag = testfile(name)
-            if removeoriginal and flag:
-                zipname = filename + '.zip'
-                if os.path.exists(zipname):
-                    os.remove(name)
+    for name in walk(path):
+        flag = testfile(name)
+        if removeoriginal and testfile(name):
+            zipname = filename + '.zip'
+            if os.path.exists(zipname):
+                os.remove(name)
 
 def main():
     try:
         import argparse
         parser = argparse.ArgumentParser()
-        parser.add_argument("path", default=os.getcwd(),
-                            help="work path")
+        parser.add_argument("path",
+                            help="work path (required)")
         parser.add_argument("-t", "--test",
                             help="test zip and xml files in path",
                             action="store_true")
