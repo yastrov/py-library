@@ -6,10 +6,10 @@ except ImportError:
     from distutils.core import setup
  
 import elib.config as config
-import elibs
+import elib.elib as elib
 
 setup(name='elib',
-        version=elibs.__version__,
+        version=elib.__version__,
         description=('Scripts for managing home ebook (fb2, epub) library:'
                      ' Indexing and search, test zip archives or test xml'
                      ' to valid. '
@@ -17,7 +17,7 @@ setup(name='elib',
         author='Yuri Astrov',
         author_email='yuriastrov@gmail.com',
         url='https://bitbucket.org/yrain/py-library/src',
-        scripts=['elibs.py',],
+        #scripts=['elibs.py',],
         packages=['elib',],
         include_package_data=True,
         install_requires=['lxml>=3.1.0', 
@@ -25,7 +25,7 @@ setup(name='elib',
         license = 'MIT',
         entry_points = {
                         'console_scripts': [
-                        'elib = elibs:main',
+                            'elib = elib.elib:main',
                         ],}
         )
 
