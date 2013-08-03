@@ -4,12 +4,11 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
- 
-import elib.config as config
-import elib.elib as elib
+import elib.elib
+import os
 
 setup(name='elib',
-        version=elib.__version__,
+        version=elib.elib.__version__,
         description=('Scripts for managing home ebook (fb2, epub) library:'
                      ' Indexing and search, test zip archives or test xml'
                      ' to valid. '
@@ -29,10 +28,13 @@ setup(name='elib',
                         ],}
         )
 
-config.createconfig()
 text = ('--------------------------------\n'
         'After installation:\n'
         '--------------------------------\n'
         'You may set database command in config file:\n{}'
        )
-print(text.format(config.config_filename))
+fname = os.path.join(
+                    os.path.expanduser("~"),
+                    ".elib", "config.ini"
+                    )
+print(text.format(fname))

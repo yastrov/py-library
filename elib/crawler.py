@@ -3,7 +3,7 @@
 import os
 from elib.models import Book, Author, Genre
 from elib.manager import BookManager
-from zipper import InvalidZipFile, ZipReader
+from elib.zipper import InvalidZipFile, ZipReader
 try:
     from lxml import etree
 except ImportError:

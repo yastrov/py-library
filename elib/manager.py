@@ -34,35 +34,16 @@ class BookManager:
         self.session = Session()
         Base.metadata.create_all(self.engine)
 
-    #Interface for Crawler
-    def add(self, obj):
-        """Add object to session."""
-        self.session.add(obj)
-
-    def commit(self):
-        self.session.commit()
-
+    # Nearest code for work with session object
+    # valid only for single-thread version.
     def getsession(self):
         return self.session
 
-    # Nearest code for work with session object
-    # only for single-thread version.
     def closesession(self):
         """Close current session.
         Also it must be called in with statement realisation."""
         if self.session:
             self.session.close()
-
-    def delete(self, *args):
-        self.session.delete(*args)
-
-    def rollback(self):
-        self.session.rollback()
-
-    def query(self, *args, **kwargs):
-        """Return Query object. After user may do what he want.
-        See more at SQLAlchemy manual."""
-        return self.session.query(*args, **kwargs)
 
     def __del__(self):
         self.closesession()
@@ -73,6 +54,6 @@ class BookManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.commit()
+            self.session.commit()
         if hasattr(self, "closesession"):
             self.closesession()
