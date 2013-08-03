@@ -45,6 +45,8 @@ class BookManager:
     def getsession(self):
         return self.session
 
+    # Nearest code for work with session object
+    # only for single-thread version.
     def closesession(self):
         """Close current session.
         Also it must be called in with statement realisation."""
@@ -72,5 +74,5 @@ class BookManager:
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             self.commit()
-        else:
+        if hasattr(self, "closesession"):
             self.closesession()
