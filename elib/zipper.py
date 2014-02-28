@@ -4,9 +4,12 @@ import os
 import zipfile
 from io import BytesIO
 import xml.etree.ElementTree as ET
+import logging
 __doc__ = """Compress all .fb2 files to individual zip archives.
 Also test all zip archives in path.
 Print output only bad files."""
+
+logger = logging.getLogger(__name__)
 
 class InvalidZipFile(Exception):
     def __init__(self, filename, error):
@@ -114,11 +117,11 @@ def testfile(filename):
                         XMLvalidate(datafile)
         return True
     except InvalidXMLFile as e:
-        print("Error in {}: {}".format(filename, e))
+        logger.info("Error in {}: {}".format(filename, e))
     except zipfile.BadZipFile as e:
-        print("{}: {} (Need to check manually!)".format(e, filename))
+        logger.info("{}: {} (Need to check manually!)".format(e, filename))
     except InvalidZipFile as e:
-        print(e)
+        logger.info(e)
     return False
 
 def zippath(path, removeoriginal=False):
@@ -157,6 +160,8 @@ def main():
                             help="remove duplicate files in path",
                             action="store_true")
         args = parser.parse_args()
+        logging.basicConfig(format='%(levelname)s - %(message)s',
+                            level=logging.DEBUG)
         if args.test:
             if os.path.isdir(args.path):
                 testpath(args.path, args.removeoriginal)
@@ -168,10 +173,12 @@ def main():
             elif os.path.isfile(args.path):
                 ziponefile(args.path, args.removeoriginal)
     except KeyboardInterrupt:
-        print("Process stopped manually.")
+        logger.info("Process stopped manually.")
     except ImportError:
-        print("Please, use Python 2.7+ or use this module as library.")
-        print("This version of Python have no module argparse.")
+        logger.info("Please, use Python 2.7+ or use this module as library."
+                    "This version of Python have no module argparse.")
+    except Exception as e:
+        logger.exception(e)
 
 if __name__ == '__main__':
     main()
