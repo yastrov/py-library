@@ -126,16 +126,21 @@ class BookInfo(dict):
         self.title = tree.xpath('//n:book-title',
                                 namespaces=ns)[0].text
         #Genres
-        
-        genre_list = tree.xpath('//n:genre',
-                                namespaces=ns)
+        try:
+            genre_list = tree.xpath('//n:genre',
+                                    namespaces=ns)
+        except:
+            genre_list = []
         self.genres = []
         for element in genre_list:
             self.genres.append(element.text)
 
         #lang
-        self.lang = tree.xpath('//n:title-info/n:lang',
-                                namespaces=ns)[0].text
+        try:
+            self.lang = tree.xpath('//n:title-info/n:lang',
+                                    namespaces=ns)[0].text
+        except:
+            self.lang = 'ru'
         #Author
         self.authors = []
         auth_list =  tree.xpath('//n:title-info/n:author',
