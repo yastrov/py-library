@@ -187,8 +187,8 @@ class BookInfo(dict):
             author =tree.xpath('//dc:creator',namespaces=ns)[0].text
             try:
                 firstname, lastname = author.split()
-            except:
-                firstname, lastname = author
+            except ValueError:
+                firstname, lastname = author, author
             self.authors = []
             d = {}
             d["firstname"] = firstname
