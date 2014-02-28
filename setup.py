@@ -15,8 +15,7 @@ setup(name='elib',
                      'Main script: elib.py (and elib after installation)'),
         author='Yuri Astrov',
         author_email='yuriastrov@gmail.com',
-        url='https://bitbucket.org/yrain/py-library/src',
-        #scripts=['elib/elib.py',],
+        url='https://github.com/yastrov/py-library',
         packages=['elib',],
         include_package_data=True,
         install_requires=['lxml>=3.1.0', 
@@ -31,7 +30,7 @@ setup(name='elib',
 text = ('--------------------------------\n'
         'After installation:\n'
         '--------------------------------\n'
-        'You may set database command in config file:\n{}'
+        'You may set database command and logging options in config file:\n{}'
        )
 fname = os.path.join(
                     os.path.expanduser("~"),
