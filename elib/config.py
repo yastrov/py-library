@@ -10,6 +10,10 @@ class Config:
                         ".elib")
         self.fname = os.path.join(self.path,
                                   "config.ini")
+        db_name = os.path.join(
+                                self.path,
+                                "elib.db")
+        self.raw_sql = 'sqlite:///{}'.format(db_name)
         self.config = configparser.ConfigParser()
         if os.path.exists(self.fname):
             self.config.read(self.fname)
@@ -17,27 +21,26 @@ class Config:
             self.create()
 
     def save(self):
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
         with open(self.fname, 'w') as configfile:
-            config.write(configfile)
+            self.config.write(configfile)
+
     def create(self):
-        db_name = os.path.join(
-                                self.path,
-                                "elib.db")
-        self.config['dbase'] = {'command': 'sqlite:///{}'.format(db_name)}
+        self.config['dbase'] = {'command': self.raw_sql}
         self.config['logging'] = {'config': 'None.ini'}
         self.save()
 
     def getSQLCommand(self):
         return self.config.get('dbase', 'command',
-                            fallback='sqlite:///{}'.\
-                            format(db_name))
+                            fallback = self.raw_sql)
 
     def setSQLCommand(self, command):
         self.config['dbase']['command'] = command
 
     def getLogConfigName(self):
         r = self.config.get('logging', 'config',
-                                fallback='None.ini')
+                                fallback = 'None.ini')
         if r is not 'None.ini':
             return r
         else:
