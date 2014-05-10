@@ -21,7 +21,7 @@ class InvalidZipFile(Exception):
         self.error = error
     def __repr__(self):
         return "Bad file '{}' in archieve '{}'!".\
-                format(error, filename)
+                format(self.error, self.filename)
     def __str__(self):
         return repr(self)
 
@@ -143,7 +143,7 @@ def testpath(path, removeoriginal=False):
     for name in walk(path):
         flag = testfile(name)
         if removeoriginal and testfile(name):
-            zipname = filename + '.zip'
+            zipname = name + '.zip'
             if os.path.exists(zipname):
                 os.remove(name)
 
